@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+p {
+    margin: 0.2em;
+}
+canvas {
+
+    background-color: #3D9970;
+}
+body {
+    background-color: #3D9970;
+}
+</style>
+
+<style type="text/css">
+#wrap {
+   width:800px;
+   margin:0 auto;
+}
+#left_col {
+   float:left;
+   position: relative;
+   width: 33%;
+}
+#right_col {
+    float:left;
+    position: relative;
+    width: 33%;
+}
+#middle_col {
+    float:left;
+    position: relative;
+    width: 25%;
+}
+</style>
+
+<script type="text/javascript">
+
+</script>
+
+<body onload="startSystem()">
+
+</head>
+
+
+<p>Welcome to UTBC Court Hourts System</p>
+<canvas id="c" width="1000" height="340"></canvas>
+
+<script>
+
+// Environment Variables
+console.log("UTBC Court Hours System");
+
+var TESTNAME = ["a", "b", "c", "d", "e", "f", "g",
+                "h", "i", "j", "k", "l", "m", "n",
+                "o", "p", "q", "r", "s", "t", "u",
+                "v", "w", "x", "y", "z"];
+var TESTID = [1, 2, 3, 4, 5, 6, 7,
+            8, 9, 10, 11, 12, 13, 14,
+            15, 16, 17, 18, 19, 20, 21,
+            22, 23, 24, 25, 26];
+
+var courtCount = 6;
+var nRow = 2;
+var nCol = 3;
+var allCourts = new Array(courtCount);
+
+// Display Properties
+var cWidth=300;
+var cHeight=150;
+var rowHeight = 20;
+
+// Timer Properties
+var maxTime = 0.6 * 60 * 1000;
+var orangeLimit = 0.3 * 60 * 1000;
+var redLimit = 0.25 * 60 * 1000;
+
+// Stores playerID: courtID
+//(queue changes, we can't tell where it is in a court)
+var playerMap = {};
+
+//var maxTime = 15 * 60 * 1000;
+//var orangeLimit = 3 * 60 * 1000;
+//var redLimit = 1 * 60 * 1000;
+
+// Utilities
+function formatDate(date) {
+
+  var minute = date.getMinutes();
+  var second = date.getSeconds();
+
+  if (minute < 10) {
+    minute = "0" + minute;
+  }
+
+  if (second < 10) {
+    second = "0" + second;
+  }
+
+  return minute + ':' + second;
+  // Don't worry about this, for debugging only
+  // return date.getYear() + ':' + date.getMonth() + ':' +date.getDay() + ':' +minute + ':' + second;
+}
+
+function constructPlayerString(arr){
+    var empty = "        ";
+    var length = 8;
+    var result = "";
+    for (var i = 0; i < arr.length; i ++){
+        var content = arr[i];
+        if (content == null){
+            content = "----"
+        }
+        result = result + String(empty + content).slice(-length);
+    }
+
+    return result;
+}
+
+// replace empty string with null
+function cleanupList(arr){
+    for (var i = 0; i < arr.length; i++){
+        if (arr[i].toString().replace(/\s/g,'') == ""){
+            arr[i] = null;
+        }
+    }
+    return arr;
+}
+
+function mergeList(arr1, arr2) {
+    var result = [null, null, null, null];
+    var curIndex = 0;
+    for (var i = 0; i < arr1.length; i++){
+        if (arr1[i] != null && arr1[i].toString().replace(/\s/g,'') != ""){
+            result[curIndex] = arr1[i];
+            curIndex += 1;
+        }
+    }
+    for (var i = 0; i < arr2.length; i++){
+        if (arr2[i] != null && arr2[i].toString().replace(/\s/g,'') != ""){
+            result[curIndex] = arr2[i];
+            curIndex += 1;
+        }
+    }
+    //console.log(result);
+    return result;
+}
+
+function checkSlotEmpty(arr) {
+    var total = 0;
+    for (var i = 0; i < arr.length; i ++){
+        if (arr[i] == null || arr[i].replace(/\s/g,'') == ""){
+            total += 1;
+        }
+    }
+    return total;
+}
+
+// return the first instance that can fit x people
+function getAvailSlot(court, count) {
+    if (checkSlotEmpty(court.curPlayer) >= count){
+        return -1;
+    }
+    for (var i = 0; i < court.queue.length; i ++){
+        if (checkSlotEmpty(court.queue[i]) >= count){
+            return i;
+        }
+    }
+
+    // 999 is bad, :P
+    return 999;
+}
+
+
+// Actual Stuff
+function startSystem() {
+
+    controlElements = {
+        courtOptBox: document.getElementById("courtOptBox"),
+        optOptBox: document.getElementById("optOptBox"),
+        // Signup Stuff
+        name1TxtBox: document.getElementById("name1TxtBox"),
+        name2TxtBox: document.getElementById("name2TxtBox"),
+        name3TxtBox: document.getElementById("name3TxtBox"),
+        name4TxtBox: document.getElementById("name4TxtBox"),
+
+        id1TxtBox: document.getElementById("id1TxtBox"),
+        id2TxtBox: document.getElementById("id2TxtBox"),
+        id3TxtBox: document.getElementById("id3TxtBox"),
+        id4TxtBox: document.getElementById("id4TxtBox"),
+
+        lvl1OptBox: document.getElementById("lvl1OptBox"),
+        lvl2OptBox: document.getElementById("lvl2OptBox"),
+        lvl3OptBox: document.getElementById("lvl3OptBox"),
+        lvl4OptBox: document.getElementById("lvl4OptBox"),
+
+        // Unsign Stuff
+        unName1TxtBox: document.getElementById("unName1TxtBox"),
+        unName2TxtBox: document.getElementById("unName2TxtBox"),
+        unName3TxtBox: document.getElementById("unName3TxtBox"),
+        unName4TxtBox: document.getElementById("unName4TxtBox"),
+
+        unId1TxtBox: document.getElementById("unId1TxtBox"),
+        unId2TxtBox: document.getElementById("unId2TxtBox"),
+        unId3TxtBox: document.getElementById("unId3TxtBox"),
+        unId4TxtBox: document.getElementById("unId4TxtBox"),
+
+        //Single/Double Signup
+        sdName1TxtBox: document.getElementById("sdName1TxtBox"),
+        sdName2TxtBox: document.getElementById("sdName2TxtBox"),
+
+        sdId1TxtBox: document.getElementById("sdId1TxtBox"),
+        sdId2TxtBox: document.getElementById("sdId2TxtBox"),
+
+        sdLvl1OptBox: document.getElementById("sdLvl1OptBox"),
+        sdLvl2OptBox: document.getElementById("sdLvl2OptBox"),
+    }
+
+    var r, c;
+
+    for (r = 0; r < nRow; r++)
+    {
+        for (c = 0; c < nCol; c++)
+        {
+            if (r * nCol + c < courtCount)
+            {
+                //console.log(r * nCol + c);
+                var s_x = 10 + c * (cWidth + 10);
+                var s_y = 10 + r * (cHeight + 20);
+                allCourts[r * nCol + c] = new court(cWidth, cHeight, r * nCol + c, "grey", s_x, s_y)
+            }
+        }
+    }
+
+    // Callback
+    document.onkeydown = function(ev) {
+        var key;
+        ev = ev || event;
+        key = ev.keyCode;
+        if (key == 116) {
+            return false;  // disable F5 key
+        }
+    }
+    //console.log(controlElements);
+    for (var i = 0; i <= courtCount; i++){
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.innerHTML = "Court " + (i + 1);
+        controlElements.courtOptBox.appendChild(opt);
+    }
+
+    displayArea.start();
+}
+
+var displayArea = {
+    //canvas : document.createElement("canvas"),
+    canvas: document.getElementById("c"),
+    start : function() {
+        //this.canvas.width = getWidth() * 0.9;
+        //this.canvas.height = getHeight() * 0.9;
+        this.context = this.canvas.getContext("2d");
+        //document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.interval = setInterval(updateCourts, 200);
+    },
+    stop : function() {
+        clearInterval(this.interval);
+    },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+}
+
+// Control elements at the bottom of this HTML
+var controlElements = null;
+
+function court(width, height, index, color, x, y, type) {
+
+    console.log("Index");
+    console.log(index);
+    console.log();
+    this.type = type;
+    this.width = width;
+    this.height = height;
+    this.x = x;
+    this.y = y;
+    this.index = index;
+    this.courtWasEmpty = false;
+
+    this.curPlayer = [null, null, null, null];
+    this.curPlayerLvl = [null, null, null, null];
+    this.queue = [[null, null, null, null], [null, null, null, null], [null, null, null, null]]
+    //this.queue = [["12", "45", null, null],
+    //                [null, "22", null, null],
+    //                ["bb", "123", null, null]]
+    this.queueLvl = [[null, null, null, null],
+                    [null, null, null, null],
+                    [null, null, null, null]]
+
+    this.startTime = new Date();
+
+    this.update = function() {
+        //console.log(controlElements);
+        ctx = displayArea.context;
+
+        // Check whether remaining time is okay
+        var curTime = new Date();
+        remainTime = maxTime - (curTime - this.startTime);
+        if (remainTime < redLimit){
+            color = "red";
+        } else if (remainTime < orangeLimit){
+            color = "orange";
+        } else {
+            color = "green";
+        }
+
+        ctx.fillStyle = color;
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        // Print title
+        ctx.font = '20px san-serif';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = 'white';
+        ctx.fillText('Court ' + (this.index + 1).toString(), this.x, this.y)
+
+
+        // Update current player, then shift queues up
+        //var available = false;
+        if (remainTime <= 0 || checkSlotEmpty(this.curPlayer) == 4) {
+
+            // if we can shift queue until not empty then stop
+            for (var i = 0; i < 4; i ++){
+                this.shiftQueue();
+                //console.log("shifted " + this.index);
+                if (checkSlotEmpty(this.curPlayer) != 4){
+                    break;
+                }
+                //console.log("keep shifting " + this.index);
+            }
+            this.startTime = new Date();
+        }
+
+        // Paint timer
+        if (checkSlotEmpty(this.curPlayer) == 4){
+            ctx.fillText('Court is available', this.x, this.y + rowHeight);
+        } else{
+            curTime.setTime(remainTime);
+            ctx.fillText('Timer: ' + formatDate(curTime), this.x, this.y + rowHeight);
+        }
+
+        // Current Players
+        ctx.fillText('Current:  ' + constructPlayerString(this.curPlayer),
+        this.x, this.y + rowHeight * 2.5);
+
+        // Queue
+        // max queue length is 3, hardcoded xd
+        for (var i = 0; i < 3; i++){
+            ctx.fillText('Queue ' + (i + 1).toString() + ": " + constructPlayerString(this.queue[i]),
+            this.x, this.y + rowHeight * 3.2 + rowHeight * (1 + i));
+        }
+
+    }
+
+    this.shiftQueue = function(){
+        this.curPlayer = this.queue[0];
+        this.queue[0] = this.queue[1];
+        this.queue[1] = this.queue[2];
+        this.queue[2] = [null, null, null, null];
+
+        this.curPlayerLvl = this.queueLvl[0];
+        this.queueLvl[0] = this.queueLvl[1];
+        this.queueLvl[1] = this.queueLvl[2];
+        this.queueLvl[2] = [null, null, null, null];
+    }
+
+}
+
+function updateCourts() {
+    displayArea.clear();
+    var i;
+    for (i = 0; i < courtCount; i++)
+    {
+        allCourts[i].update();
+    }
+}
+
+// Call some sort of database stuff to match name with ID
+// of UTBC member.
+// To check for all errors, don't do verify && verify && verfiy..
+// run each verify separately
+function verifyTester(name, id){
+    var save = -1;
+    for (var i = 0; i < TESTNAME.length; i++){
+        if (name == TESTNAME[i]){
+            save = i;
+        }
+    }
+    if (save == -1 ){
+        console.log("Cannot find name");
+        return false;
+    }
+    else if (TESTID[save] != id){
+        console.log("Matching ID is incorrect. Should be " + TESTID[i] + " but is " + id);
+        return false;
+    }
+    return true;
+}
+
+function verifyCredential(nameBox, idBox){
+
+    console.log("Verifying " + nameBox.value + " " + idBox.value);
+
+    if (nameBox.value.replace(/\s/g,'') == "" && idBox.value.replace(/\s/g,'') == ""){
+        console.log("Detected empty boxes");
+        return true;
+    }
+
+    // TODO replace with DB verification
+    var checkResult = verifyTester(nameBox.value, idBox.value);
+    if (!checkResult){
+        nameBox.style.color = "red";
+        idBox.style.color = "red";
+    }
+    return checkResult;
+}
+
+
+function checkPlayerMap(playerList) {
+    var result = true;
+    for (var i = 0; i < playerList.length; i++){
+        if (playerList[i] != null && playerMap[playerList[i]] != undefined){
+            alert(playerList[i] + " is already playing!");
+            result = false;
+        }
+    }
+    return result;
+}
+
+function updatePlayerMap(playerList, court){
+    for (var i = 0; i < playerList.length; i++){
+        if (playerList[i] != null) {
+            playerMap[playerList[i]] = court;
+        }
+    }
+}
+
+// Signup functions
+function signupOkay() {
+    var a = verifyCredential(controlElements.name1TxtBox, controlElements.id1TxtBox);
+    var b = verifyCredential(controlElements.name2TxtBox, controlElements.id2TxtBox);
+    var c = verifyCredential(controlElements.name3TxtBox, controlElements.id3TxtBox);
+    var d = verifyCredential(controlElements.name4TxtBox, controlElements.id4TxtBox);
+
+    var result = true;
+    if (a && b && c && d){
+
+        playerList = cleanupList([controlElements.name1TxtBox.value,
+                        controlElements.name2TxtBox.value,
+                        controlElements.name3TxtBox.value,
+                        controlElements.name4TxtBox.value ]);
+
+        playerLvlList = cleanupList([controlElements.lvl1OptBox.selectedIndex,
+                        controlElements.lvl2OptBox.selectedIndex,
+                        controlElements.lvl3OptBox.selectedIndex,
+                        controlElements.lvl4OptBox.selectedIndex ]);
+
+        // if new queue, check has empty queue
+        var courtIndex = controlElements.courtOptBox.selectedIndex;
+        var optIndex = controlElements.optOptBox.selectedIndex;
+
+        if (checkPlayerMap(playerList)){
+            if (optIndex == 0) {
+                var index = getAvailSlot(allCourts[courtIndex], 4);
+
+                if (index == -1){
+                    allCourts[courtIndex].curPlayer = playerList;
+                    allCourts[courtIndex].curPlayerLvl = playerLvlList;
+                } else if (index >= 0 && index < 3){
+                    allCourts[courtIndex].queue[index] = playerList;
+                    allCourts[courtIndex].queueLvl[index] = playerLvlList;
+                } else {
+                    // probably bad
+                    alert("No available slot in the queue for you T_T");
+                    result = false;
+                }
+            } else if (optIndex == 1){
+                if (4 - checkSlotEmpty(playerList) <=
+                checkSlotEmpty(allCourts[courtIndex].curPlayer)){
+                    allCourts[courtIndex].curPlayer = mergeList(allCourts[courtIndex].curPlayer, playerList);
+                    allCourts[courtIndex].curPlayerLvl = mergeList(allCourts[courtIndex].curPlayerLvl, playerLvlList);
+                } else {
+                    alert("No available slot in the selected queue. T_T");
+                    result = false;
+                }
+            } else {
+                var actualIndex = optIndex - 2;
+
+                if (4 - checkSlotEmpty(playerList) <=
+                checkSlotEmpty(allCourts[courtIndex].queue[actualIndex])){
+                    allCourts[courtIndex].queue[actualIndex] = mergeList(allCourts[courtIndex].queue[actualIndex], playerList);
+                    allCourts[courtIndex].queueLvl[actualIndex] = mergeList(allCourts[courtIndex].queueLvl[actualIndx], playerLvlList);
+                } else {
+                    alert("No available slot in the selected queue. T_T");
+                    result = false;
+                }
+            }
+        }
+    } else {
+        alert ("Invalid Name/ID combination");
+        console.log("Invalid Name/ID combination");
+        result = false;
+    }
+
+    if (result){
+        updatePlayerMap(playerList, courtIndex);
+        signupCancel();
+    }
+}
+
+function signupCancel() {
+    controlElements.name1TxtBox.value = "";
+    controlElements.name2TxtBox.value = "";
+    controlElements.name3TxtBox.value = "";
+    controlElements.name4TxtBox.value = "";
+
+    controlElements.id1TxtBox.value = "";
+    controlElements.id2TxtBox.value = "";
+    controlElements.id3TxtBox.value = "";
+    controlElements.id4TxtBox.value = "";
+
+    controlElements.name1TxtBox.style.color = "black";
+    controlElements.name2TxtBox.style.color = "black";
+    controlElements.name3TxtBox.style.color = "black";
+    controlElements.name4TxtBox.style.color = "black";
+
+    controlElements.id1TxtBox.style.color = "black";
+    controlElements.id2TxtBox.style.color = "black";
+    controlElements.id3TxtBox.style.color = "black";
+    controlElements.id4TxtBox.style.color = "black";
+
+    controlElements.lvl1OptBox.selectedIndex = 0;
+    controlElements.lvl2OptBox.selectedIndex = 0;
+    controlElements.lvl3OptBox.selectedIndex = 0;
+    controlElements.lvl4OptBox.selectedIndex = 0;
+}
+
+
+// Unsign functions
+function unsignupOkay() {
+    var result = true;
+
+    var a = verifyCredential(controlElements.unName1TxtBox, controlElements.unId1TxtBox);
+    var b = verifyCredential(controlElements.unName2TxtBox, controlElements.unId2TxtBox);
+    var c = verifyCredential(controlElements.unName3TxtBox, controlElements.unId3TxtBox);
+    var d = verifyCredential(controlElements.unName4TxtBox, controlElements.unId4TxtBox);
+
+    if (a && b && c && d){
+        playerList = cleanupList([controlElements.unName1TxtBox.value,
+                      controlElements.unName2TxtBox.value,
+                      controlElements.unName3TxtBox.value,
+                      controlElements.unName4TxtBox.value ]);
+
+        for (var i = 0; i < playerList.length; i++){
+            if (playerList[i] != null && playerMap[playerList[i]] != undefined){
+                console.log("Deleting " + playerList[i]);
+                var found = false;
+
+                var court = allCourts[playerMap[playerList[i]]];
+
+                // Search in all entries of this court to remove this player
+                for (var j = 0; j < court.curPlayer.length; j++){
+                    if (court.curPlayer[i] == playerList[i]){
+                        found = true;
+                        court.curPlayer[i] = null;
+                        court.curPlayerLvl[i] = null;
+                        break;
+                    }
+                }
+
+                for (var k = 0; k < court.queue.length; k++){
+                    for (var j = 0; j < court.queue[k].length; j++){
+                        if (court.queue[k][i] == playerList[i]){
+                            found = true;
+                            court.queue[k][i] = null;
+                            court.queueLvl[k][i] = null;
+                            break;
+                        }
+                    }
+                }
+
+                court.curPlayer = mergeList(court.curPlayer, [null]);
+                court.curPlayerLvl = mergeList(court.curPlayerLvl, [null]);
+
+                for (var j = 0; j < court.queue.length; j++){
+                  court.queue[j] = mergeList(court.queue[j], [null]);
+                  court.queueLvl[j] = mergeList(court.queueLvl[j], [null]);
+                }
+
+                playerMap[playerList[i]] = undefined;
+            }
+        }
+    } else {
+        alert ("Invalid Name/ID combination");
+        result = false;
+    }
+
+    if (result){
+        unsignupCancel();
+    }
+}
+
+function unsignupCancel() {
+    controlElements.unName1TxtBox.value = "";
+    controlElements.unName2TxtBox.value = "";
+    controlElements.unName3TxtBox.value = "";
+    controlElements.unName4TxtBox.value = "";
+
+    controlElements.unId1TxtBox.value = "";
+    controlElements.unId2TxtBox.value = "";
+    controlElements.unId3TxtBox.value = "";
+    controlElements.unId4TxtBox.value = "";
+
+    controlElements.unName1TxtBox.style.color = "black";
+    controlElements.unName2TxtBox.style.color = "black";
+    controlElements.unName3TxtBox.style.color = "black";
+    controlElements.unName4TxtBox.style.color = "black";
+
+    controlElements.unId1TxtBox.style.color = "black";
+    controlElements.unId2TxtBox.style.color = "black";
+    controlElements.unId3TxtBox.style.color = "black";
+    controlElements.unId4TxtBox.style.color = "black";
+}
+
+
+// Single Double Signup
+function sdsignupOkay() {
+    var a = verifyCredential(controlElements.sdName1TxtBox, controlElements.sdId1TxtBox);
+    var b = verifyCredential(controlElements.sdName2TxtBox, controlElements.sdId2TxtBox);
+
+    alert("!!! UNDER CONSTRUCTION !!!");
+}
+
+function sdsignupCancel() {
+    controlElements.sdName1TxtBox.value = "";
+    controlElements.sdName2TxtBox.value = "";
+
+    controlElements.sdId1TxtBox.value = "";
+    controlElements.sdId2TxtBox.value = "";
+
+    controlElements.sdName1TxtBox.style.color = "black";
+    controlElements.sdName2TxtBox.style.color = "black";
+
+    controlElements.sdId1TxtBox.style.color = "black";
+    controlElements.sdId2TxtBox.style.color = "black";
+
+    controlElements.sdLvl1OptBox.selectedIndex = 0;
+    controlElements.sdLvl2OptBox.selectedIndex = 0;
+
+    alert("!!! UNDER CONSTRUCTION !!!");
+}
+
+
+
+function getWidth() {
+  return Math.max(
+    document.body.scrollWidth,
+    document.documentElement.scrollWidth,
+    document.body.offsetWidth,
+    document.documentElement.offsetWidth,
+    document.documentElement.clientWidth
+  );
+}
+
+function getHeight() {
+  return Math.max(
+    document.body.scrollHeight,
+    document.documentElement.scrollHeight,
+    document.body.offsetHeight,
+    document.documentElement.offsetHeight,
+    document.documentElement.clientHeight
+  );
+}
+
+
+</script>
+
+</body>
+<!--
+<div>
+<button id="playagain" onclick="clickPlayagain()">Rotate</button>
+</div>
+-->
+
+<div id="controls">
+    <div id="left_col">
+        <p><b>--- Signup ---</b></p>
+        <div>
+            Court:
+            <select id="courtOptBox" value="Please Select">
+              <!-- Javascript fill in content -->
+            </select>
+            Options:
+            <select id="optOptBox">
+              <option value="new">New Queue</option>
+              <option value="cur">Play Now</option>
+              <option value=0>Queue 1</option>
+              <option value=1>Queue 2</option>
+              <option value=2>Queue 3</option>
+            </select>
+        </div>
+        <div>
+            Name <textarea rows="1" cols="9" id="name1TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="id1TxtBox"></textarea>
+            Level <select rows="1" cols="9" id="lvl1OptBox">
+                <option value=1>Beginner</option>
+                <option value=2>Intermediate</option>
+                <option value=3>Advanced</option>
+            </select>
+        </div>
+        <div>
+            Name <textarea rows="1" cols="9" id="name2TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="id2TxtBox"></textarea>
+            Level <select rows="1" cols="9" id="lvl2OptBox">
+                <option value=1>Beginner</option>
+                <option value=2>Intermediate</option>
+                <option value=3>Advanced</option>
+            </select>
+        </div>
+        <div>
+            Name <textarea rows="1" cols="9" id="name3TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="id3TxtBox"></textarea>
+            Level <select rows="1" cols="9" id="lvl3OptBox">
+                <option value=1>Beginner</option>
+                <option value=2>Intermediate</option>
+                <option value=3>Advanced</option>
+            </select>
+        </div>
+        <div>
+            Name <textarea rows="1" cols="9" id="name4TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="id4TxtBox"></textarea>
+            Level <select rows="1" cols="9" id="lvl4OptBox">
+                <option value=1>Beginner</option>
+                <option value=2>Intermediate</option>
+                <option value=3>Advanced</option>
+            </select>
+        </div>
+        <div>
+            <button onclick="signupOkay()">Okay</button>
+            <button onclick="signupCancel()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="middle_col">
+        <p><b>--- Unsign Up ---</b></p>
+        <p>
+            <br>
+        </p>
+        <div>
+            Name <textarea rows="1" cols="9" id="unName1TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="unId1TxtBox"></textarea>
+        </div>
+        <div>
+            Name <textarea rows="1" cols="9" id="unName2TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="unId2TxtBox"></textarea>
+        </div>
+        <div>
+            Name <textarea rows="1" cols="9" id="unName3TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="unId3TxtBox"></textarea>
+        </div>
+        <div>
+            Name <textarea rows="1" cols="9" id="unName4TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="unId4TxtBox"></textarea>
+        </div>
+        <div>
+            <button onclick="unsignupOkay()">Okay</button>
+            <button onclick="unsignupCancel()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="right_col">
+        <p><b>--- Single/Double ---</b></p>
+        <p>
+            !!! UNDER CONSTRUCTION !!!
+        </p>
+        <div>
+            Name <textarea rows="1" cols="9" id="sdName1TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="sdId1TxtBox"></textarea>
+            Level <select rows="1" cols="9" id="sdLvl3OptBox">
+                <option value=1>Beginner</option>
+                <option value=2>Intermediate</option>
+                <option value=3>Advanced</option>
+            </select>
+        </div>
+        <div>
+            Name <textarea rows="1" cols="9" id="sdName2TxtBox"></textarea>
+            ID <textarea rows="1" cols="9" id="sdId2TxtBox"></textarea>
+            Level <select rows="1" cols="9" id="sdLvl3OptBox">
+                <option value=1>Beginner</option>
+                <option value=2>Intermediate</option>
+                <option value=3>Advanced</option>
+            </select>
+        </div>
+        <div>
+            <button onclick="sdsignupOkay()">Okay</button>
+            <button onclick="sdsignupCancel()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+</html>
