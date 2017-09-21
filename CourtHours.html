@@ -21,9 +21,7 @@
   </style>
 
   <head>
-
     <title>Court Hours | UTBC - University of Toronto Badminton Club</title>
-
     <meta name="description" content="The University of Toronto Badminton Club (UTBC) is a student organization for all UofT students and faculty to play badminton and enjoy the support in a healthy, social and interactive environment.">
     <meta name="keywords" content="UTBC,Club,Badminton,Play,Sport,University,Toronto,Team,">
     <meta charset="utf-8" />
@@ -54,11 +52,7 @@
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="msapplication-TileImage" content="/favicon/mstile-144x144.png">
     <meta name="application-name" content="UTBC">
-
   </head>
-
-
-
   <body  onload="startSystem()">
 
     <!-- Header -->
@@ -229,6 +223,56 @@
       var txt = document.createElement("text");
     }
 
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/4.3.1/firebase.js"></script>
+  <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyC76kIXgswO14wXQzw6Hhj2pubT0zqcNm0",
+      authDomain: "utbc-d0849.firebaseapp.com",
+      databaseURL: "https://utbc-d0849.firebaseio.com",
+      projectId: "utbc-d0849",
+      storageBucket: "utbc-d0849.appspot.com",
+      messagingSenderId: "463424028367"
+    };
+    
+    // Use as global singleton
+    var firebaseApp = firebase.initializeApp(config);
+    var userId = firebase.auth();
+    var db = firebase.database();
+
+    // Add player to some court and script
+    function fb_addPlayer(court, playerID, playerName) {
+
+    }
+
+    // -------- HELPER functions for the three Queues (beginner, intermediate, and advanced) --------
+
+    // Add a player to some queue level
+    function fb_addPlayerToQueue(playerObj, queueLevel) {
+      return db.ref("queues/" + queueLevel).update //Do update here
+
+    }
+
+    function fb_getQueue(queueLevel) {
+      return db.ref("queues/" + queueLevel).once('value').then(function(snapshot) {
+        return snapshot.val();
+      });
+    }
+
+    // ------ HELPER functions to for the actual courts
+    function fb_getCourts() {
+      return db.ref("courts").once('value').then(function(snapshot) {
+        return snapshot.val();
+      });
+    }
+
+    // ------- Helper function that will set the firebase clock to now (the firebase timer for when the last rotation was)
+    function fb_resetTimer() {
+      // Resets the timer to now
+      db.ref('last_rotation_time/').set(new Date().getTime());
+    }
   </script>
 
 </html>
