@@ -1,0 +1,376 @@
+<!DOCTYPE HTML>
+<html>
+<style media="all">
+    h3,
+    h3+p {
+        display: inline;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    button.link {
+        border: none;
+        padding: 0ex 1ex;
+        background-color: #606060
+    }
+
+    .overlay {
+        background-color:#EFEFEF;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        top: 0px;
+        left: 0px;
+        opacity: .5; /* in FireFox */
+        filter: alpha(opacity=50); /* in IE */
+    }
+
+    #sticky_div {
+        margin-top: auto;
+        position: fixed;
+        top: 12.5%;
+        padding: 1ex;
+        width: auto;
+        background-color: #333;
+        color: #fff;
+        font-size: 1.6em;
+        border-radius: 0.7ex;
+        z-index: 1;
+    }
+</style>
+<style type="text/css">
+    #wrap {
+        margin: 0 auto;
+    }
+
+    #left_col {
+        float: left;
+        width: 80%;
+    }
+
+    #right_col {
+        float: right;
+        width: 20%;
+    }
+</style>
+
+
+<head>
+    <title>Court Hours | UTBC - University of Toronto Badminton Club</title>
+
+    <meta name="description" content="The University of Toronto Badminton Club (UTBC) is a student organization for all UofT students and faculty to play badminton and enjoy the support in a healthy, social and interactive environment.">
+    <meta name="keywords" content="UTBC,Club,Badminton,Play,Sport,University,Toronto,Team,">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <link rel="stylesheet" href="assets/css/main.css" />
+
+    <link rel="apple-touch-icon" sizes="57x57" href="/favicon/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/favicon/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/favicon/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/favicon/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/favicon/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/favicon/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/favicon/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon-180x180.png">
+    <meta name="apple-mobile-web-app-title" content="UTBC">
+    <link rel="icon" type="image/png" href="/favicon/favicon-192x192.png" sizes="192x192">
+    <link rel="icon" type="image/png" href="/favicon/favicon-160x160.png" sizes="160x160">
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="/favicon/favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/favicon/favicon-32x32.png" sizes="32x32">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-TileImage" content="/favicon/mstile-144x144.png">
+    <meta name="application-name" content="UTBC">
+</head>
+
+
+<body onload="startSystem()" onoffline="updateOfflineStatus()">
+    <!-- Header -->
+    <header id="header">
+        <h1><a href="index.php"><strong>UTBC</strong></a></h1>
+        <nav id="nav">
+            <ul>
+                <li><a><strong id="sess_header">Remaining Time:</strong></a></li>
+                <li><a><strong id="sess_timer1">15:00</strong></a></li>
+                <li><a href="index.php">Home</a></li>
+                <li><a href="about.php">About</a></li>
+                <li><a href="faq.php">Play</a></li>
+                <li><a href="SignUp.php">Register</a></li>
+                <li><a href="league.php">League</a></li>
+                <li><a href="contact.php">Contact</a></li>
+            </ul>
+        </nav>
+
+    </header>
+
+
+    <a href="#menu" class="navPanelToggle"><span class="fa fa-bars"></span></a>
+
+
+    <section class="wrapper style2 special">
+        <div class="container" class="12u$ 12u$(medium)" align="center">
+            <header class="major">
+                <h2>
+                    <MAIN></MAIN>Court Hours System</h2>
+            </header>
+        </div>
+        <div id="hint" style="margin-top:-7em">
+            Welcome to UTBC online court hours information system. You can view court availability below.
+            </br>
+            Color represents player's level.
+            <font color="red">Red: Advanced</font>
+            <font color="orange">Orange: Intermediate</font>
+            <font color="green">Green: Beginner</font>
+            </br>
+            <b> Ask a UTBC exec at the booth to sign in and sign out.</b>
+            </br>
+            See top of the page and the side timer box for remaining session time.
+        </div>
+    </section>
+
+
+    <div id="sticky_div" class="container">
+        <div id="sticky_content" style="visibility: visible">
+            <div align="center">Remaining Time:</div>
+            <div id="sess_timer2" align="center">15:00</div>
+        </div>
+    </div>
+
+
+    <section id="main_content" class="wrapper style1 special">
+
+        <div class="container">
+            <div id="courtsDiv" class="row 25%">
+                <!--Javascript generated content here-->
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="beginner_queue" class="row 300%">
+                <div class="2u$ 12u$(medium)">
+                    <h3>Beginner</h3>
+                </div>
+                <div class="10u$ 12u$(medium)" align="left">
+                    <p id="begQueue" style="white-space: pre-wrap; word-wrap: break-word;">beginner queue</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="intermediate_queue" class="row 300%">
+                <div class="2u$ 12u$(medium)">
+                    <h3>Intermediate</h3>
+                </div>
+                <div class="10u$ 12u$(medium)" align="left">
+                    <p id="intQueue" style="white-space: pre-wrap; word-wrap: break-word;">intermediate queue</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="advanced_queue" class="row 300%">
+                <div class="2u$ 12u$(medium)">
+                    <h3>Advanced</h3>
+                </div>
+                <div class="10u$ 12u$(medium)" align="left">
+                    <p id="advQueue" style="white-space: pre-wrap; word-wrap: break-word;">advanced queue</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="pair_queue" class="row 300%">
+                <div class="2u$ 12u$(medium)">
+                    <h3>Pairs</h3>
+                </div>
+                <div class="10u$ 12u$(medium)" align="left">
+                    <p id="pairQueue" style="white-space: pre-wrap; word-wrap: break-word;">Pair queue</p>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <section id="admin_content" class="wrapper style2 special" >
+
+        <div id="adminLoginDiv" class="container" style="visibility: visible; margin-top:-2em">
+          <div class="row 300%">
+              <div class="2u$ 12u$(medium)" align="center">
+                  <h4 style="margin:1.2em; margin-top:2em">Admin Login</h4>
+            </div>
+            <div class="3u$ 12u$(medium)" align="left">
+                Name:
+                <input type="text" class="form-control"
+                id="adminName" name="adminName" placeholder="Eric"
+                required data-parsley-required data-parsley-trigger="focusin focusout"
+                data-parsley-group="block1">
+            </div>
+            <div class="3u$ 12u$(medium)" align="left">
+                Password:
+                <input type="password" class="form-control"
+                id="adminPasswd" name="passwd"
+                required data-parsley-required data-parsley-trigger="focusin focusout"
+                data-parsley-group="block1">
+            </div>
+            <div class="1.5u$ 12u$(medium)" align="center">
+                <button type="submit" class="btn btn-default pull-right pull-down"
+                id="loginButton" onclick="adminLogin()" style="margin:1.2em">Login</button>
+            </div>
+          </div>
+      </div>
+
+        <!-- use javascript to change visibility -->
+        <div id="addPlayerDiv" class="container" style="visibility: hidden; margin-top:1.5em; height=0px">
+          <div class="row 300%">
+              <div class="2u$ 12u$(medium)" align="center">
+                  <h4 style="margin:1.2em; margin-top:2em">Add Player</h4>
+            </div>
+            <div class="1.5u$ 12u$(medium)" align="left">
+                Player ID:
+                <input type="text" class="form-control"
+                id="playerID" name="playerID" placeholder="123"
+                required data-parsley-required data-parsley-trigger="focusin focusout"
+                data-parsley-group="block1"
+                oninput="getNameSuggestion(1)">
+            </div>
+            <!-- Suggest name for player -->
+            <div class="2u$ 12u$(medium)" align="left">
+                Name:
+                <input type="text" class="form-control"
+                id="playerName" name="playerName" placeholder="Eric"
+                required data-parsley-required data-parsley-trigger="focusin focusout"
+                data-parsley-group="block1">
+            </div>
+            <div class="2u$ 12u$(medium)" align="left">
+                Level: <select id="playerLevel">
+                    <option value=0>Beginner</option>
+                    <option value=1>Intermediate</option>
+                    <option value=2>Advanced</option>
+                </select>
+            </div>
+            <div class="2u$ 12u$(medium)" align="left">
+                Pair:
+                <input type="text" class="form-control"
+                id="playerPair" name="playerPair" placeholder=""
+                required data-parsley-required data-parsley-trigger="focusin focusout"
+                data-parsley-group="block1">
+            </div>
+            <div class="1u$ 12u$(medium)" align="center">
+              <button id="addPlayer" onclick="addPlayer()" class="btn btn-default pull-down"
+              style="margin:1.2em; margin-top:1.5em">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="suggestionDiv" class="container" style="visibility: hidden; margin-top:0em; height=0px">
+          <div class="row 300%">
+
+            <div class="3u$ 12u$(medium)" align="center">
+
+            </div>
+            <!-- Suggest name for player -->
+            <div class="6u$ 12u$(medium)" align="center" id="nameSug" style="visibility: hidden; height:0px">
+
+            </div>
+          </div>
+        </div>
+
+        <div id="removePlayerDiv" class="container" style="visibility: hidden; margin-top:1.5em; height=0px">
+          <div class="row 300%">
+              <div class="2u$ 12u$(medium)" align="center">
+            <h4  style="margin:1.2em; margin-top:1.5em">Remove Player</h4>
+        </div>
+            <div class="1.5u$ 12u$(medium)" align="left">
+                Player ID:
+                <input type="text" class="form-control"
+                id="rPlayerID" name="playerID" placeholder="79"
+                required data-parsley-required data-parsley-trigger="focusin focusout"
+                data-parsley-group="block1"
+                oninput="getNameSuggestion(2)">
+            </div>
+            <!-- Suggest name for player -->
+            <div class="2u$ 12u$(medium)" align="left">
+                Name:
+                <input type="text" class="form-control"
+                id="rPlayerName" name="playerName" placeholder="Aaron"
+                required data-parsley-required data-parsley-trigger="focusin focusout"
+                data-parsley-group="block1">
+            </div>
+            <div class="1u$ 12u$(medium)" align="center">
+              <button id="removePlayer" onclick="removePlayer()" class="btn btn-default pull-down"
+              style="margin:1.2em; margin-top:1.5em">Remove Player</button>
+            </div>
+          </div>
+        </div>
+
+    <div class="container">
+        <div id="controlDiv" class="12u$ 12u$(medium)" style="visibility: hidden; margin-top:0em;">
+          <!-- start new session will re-arrange players -->
+          <button id="arrangeSess" onclick="arrangeSess()" class="btn btn-default">Organize New Session</button>
+          <button id="startSess" onclick="startSess()" class="btn btn-default">Start Session</button>
+          <button id="stopSess" onclick="stopSess()" class="btn btn-default">Stop Session</button>
+          <button id="cleanSess" onclick="cleanSess()" class="btn btn-default">Clean Session</button>
+        </div>
+    </div>
+
+    <div id="moreInfoDiv" class="container" style="visibility: hidden; margin-top:1em; height=0px">
+      <div class="row 300%">
+        <div class="2u$ 12u$(medium)">
+            <h3>Player Queue</h3>
+        </div>
+        <div class="10u$ 12u$(medium)" align="left">
+            <p id="trueQueue" style="white-space: pre-wrap; word-wrap: break-word;">Current queue</p>
+        </div>
+      </div>
+
+      <div class="row 300%">
+        <div class="2u$ 12u$(medium)">
+            <h3>Pairs</h3>
+        </div>
+        <div class="10u$ 12u$(medium)" align="left">
+            <p id="allPairs" style="white-space: pre-wrap; word-wrap: break-word;">Pairs</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="container">
+        <div id="controlDiv2" class="5u$ 12u$(medium)" style="margin-top:0em; height=0px">
+            <img id="icon1" src="/favicon/apple-touch-icon-72x72.png" style="visibility: hidden" alt="" onclick="showAdmin()" />
+            <img src="/favicon/apple-touch-icon-72x72.png" style="visibility: hidden" alt="" onclick="showAdmin1()" />
+            <img src="/favicon/apple-touch-icon-72x72.png" style="visibility: hidden" alt="" onclick="fb_authenticate()" />
+        </div>
+    </div>
+  	</section>
+
+</body>
+
+<script src="https://www.gstatic.com/firebasejs/4.4.0/firebase.js"></script>
+<script>
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyCbL56kzX9-dIEz5OUVKPhMrc2fpFydYGw",
+        authDomain: "utbcch.firebaseapp.com",
+        databaseURL: "https://utbcch.firebaseio.com",
+        projectId: "utbcch",
+        storageBucket: "utbcch.appspot.com",
+        messagingSenderId: "1086995300973"
+    };
+    firebase.initializeApp(config);
+</script>
+
+<script type="text/javascript" src="chJS/chUtil.js"></script>
+<script type="text/javascript" src="chJS/chFirebase.js"></script>
+<script type="text/javascript" src="chJS/chArrange.js"></script>
+<script type="text/javascript" src="chJS/chInteractions.js"></script>
+
+<div id="test"></div>
+
+</script>
+
+</html>
